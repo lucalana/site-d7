@@ -10,35 +10,48 @@
   const header = $('#header');
   const progress = $('#progress');
   const fab = $('#fab');
+  const mbar = $('#mbar');
   const burger = $('#burger');
   const menu = $('#menu');
 
   $('#year').textContent = new Date().getFullYear();
 
-  /* ---------- Preloader ---------- */
-  const pre = $('#preloader');
-  let started = false;
+  /* ---------- Entrada (sem preloader: o conteúdo aparece já) ---------- */
   const goLive = (el) => {
     if (!el.classList.contains('reveal-img')) return;
     const d = parseFloat(getComputedStyle(el).getPropertyValue('--d')) || 0;
     setTimeout(() => el.classList.add('is-live'), 1600 + d * 110);
   };
-  const start = () => {
-    if (started) return;
-    started = true;
-    pre && pre.classList.add('is-done');
-    // dispara o hero logo depois da cortina subir
-    setTimeout(() => {
-      $$('.hero .reveal, .hero .reveal-img, .hero__title').forEach(el => { el.classList.add('is-in'); goLive(el); });
-    }, reduce ? 0 : 450);
-  };
-  const minWait = new Promise(r => setTimeout(r, reduce ? 0 : 1000));
-  const loaded = new Promise(r => (document.readyState === 'complete' ? r() : addEventListener('load', r, { once: true })));
-  Promise.all([minWait, loaded]).then(start);
-  setTimeout(start, 2600); // trava de segurança em conexões lentas
+  // hero: dispara no primeiro frame
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $$('.hero .reveal, .hero .reveal-img, .hero__title').forEach(el => { el.classList.add('is-in'); goLive(el); });
+  }));
 
-  /* ---------- Reveal on scroll ---------- */
-  const revealTargets = $$('.reveal, .reveal-img').filter(el => !el.closest('.hero'));
+  /* ---------- Títulos: revelação palavra por palavra ---------- */
+  const splitHeading = (el) => {
+    let i = 0;
+    el.setAttribute('aria-label', el.textContent.replace(/\s+/g, ' ').trim());
+    const walk = (node) => {
+      [...node.childNodes].forEach(ch => {
+        if (ch.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          ch.textContent.split(/(\s+)/).forEach(t => {
+            if (!t) return;
+            if (/^\s+$/.test(t)) { frag.append(document.createTextNode(' ')); return; }
+            const w = document.createElement('span'); w.className = 'w'; w.setAttribute('aria-hidden', 'true');
+            const inner = document.createElement('i'); inner.textContent = t; inner.style.setProperty('--i', i++);
+            w.append(inner); frag.append(w);
+          });
+          ch.replaceWith(frag);
+        } else if (ch.nodeType === 1 && ch.tagName !== 'BR') walk(ch);
+      });
+    };
+    walk(el);
+  };
+  if (!reduce) $$('.split').forEach(splitHeading);
+
+  /* ---------- Reveal on scroll (imagens, títulos, kickers) ---------- */
+  const revealTargets = $$('.reveal, .reveal-img, .split, .kicker').filter(el => !el.closest('.hero'));
   if ('IntersectionObserver' in window) {
     const io = new IntersectionObserver((entries) => {
       entries.forEach(e => {
@@ -91,7 +104,11 @@
   const stepsBox = $('#steps');
   const stepsFill = $('#stepsFill');
   const heroEl = $('.hero');
-  let lastY = scrollY, ticking = false;
+  let lastY = scrollY, ticking = false, contactInView = false;
+  const contact = $('#contato');
+  if (contact && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([e]) => { contactInView = e.isIntersecting; onScroll(); }, { threshold: 0.12 }).observe(contact);
+  }
 
   const update = () => {
     ticking = false;
@@ -109,6 +126,7 @@
     lastY = y;
 
     fab.classList.toggle('is-visible', y > vh * 0.6);
+    if (mbar) mbar.classList.toggle('is-visible', y > vh * 0.6 && !contactInView && !menu.classList.contains('is-open'));
 
     // parallax leve (só translate; nada de layout)
     if (parallaxEls.length && y < vh * 1.4) {
@@ -280,6 +298,18 @@
     prev.addEventListener('click', () => g.scrollBy({ left: -step(), behavior: reduce ? 'auto' : 'smooth' }));
     next.addEventListener('click', () => g.scrollBy({ left: step(), behavior: reduce ? 'auto' : 'smooth' }));
     sync();
+  }
+
+
+  /* ---------- Planos (mobile): abre com o "mais procurado" centralizado ---------- */
+  const pg = $('.plans__grid'), featured = $('.plan--featured');
+  if (pg && featured && 'IntersectionObserver' in window) {
+    const po = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      po.disconnect();
+      if (pg.scrollWidth > pg.clientWidth) pg.scrollLeft = featured.offsetLeft - (pg.clientWidth - featured.offsetWidth) / 2;
+    }, { threshold: 0.2 });
+    po.observe(pg);
   }
 
   /* ---------- FAQ: um aberto por vez ---------- */

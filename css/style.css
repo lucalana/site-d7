@@ -2,6 +2,10 @@
    D7 Alta Performance — estilo
    Preto + laranja · Barlow Condensed / Barlow
    ========================================================== */
+/* Fontes provisórias com largura calibrada para as reais: sem "pulo" de layout na troca */
+@font-face{font-family:"Barlow Condensed Fallback";src:local("Arial Bold"),local("Arial-BoldMT"),local("Arial");font-weight:500 800;size-adjust:68%}
+@font-face{font-family:"Barlow Fallback";src:local("Arial"),local("ArialMT");font-weight:400 600;size-adjust:95.6%}
+
 :root{
   --bg:#0a0a0b;
   --bg-2:#111113;
@@ -16,8 +20,8 @@
   --orange-d:#c9540f;
   --ease:cubic-bezier(.22,1,.36,1);
   --ease-io:cubic-bezier(.65,0,.35,1);
-  --f-display:'Barlow Condensed','Arial Narrow',Impact,sans-serif;
-  --f-body:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-display:'Barlow Condensed','Barlow Condensed Fallback',Impact,sans-serif;
+  --f-body:'Barlow','Barlow Fallback',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --gutter:clamp(20px,5vw,48px);
   --maxw:1240px;
   --radius:20px;
@@ -87,19 +91,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .btn:hover .ico--arrow{transform:translateX(5px)}
 .btn:active{transform:scale(.97)}
 
-/* ---------- Preloader / progresso ---------- */
-.preloader{
-  position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-content:center;justify-items:center;gap:22px;
-  transition:transform .9s var(--ease-io),visibility 0s .9s;
-}
-.preloader__mark{font-family:var(--f-display);font-weight:800;font-size:5rem;line-height:1;letter-spacing:-.02em;animation:pmark .9s var(--ease) both}
-.preloader__mark span{color:var(--orange)}
-.preloader__bar{width:140px;height:2px;background:var(--line);border-radius:2px;overflow:hidden}
-.preloader__bar i{display:block;height:100%;background:var(--orange);transform:scaleX(0);transform-origin:left;animation:pbar 1s var(--ease-io) forwards}
-@keyframes pmark{from{opacity:0;transform:translateY(16px) scale(.94)}}
-@keyframes pbar{to{transform:scaleX(1)}}
-.preloader.is-done{transform:translateY(-100%);visibility:hidden}
-html:not(.js) .preloader{display:none}
+/* ---------- Progresso ---------- */
 
 .progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:150;background:linear-gradient(90deg,var(--orange-d),var(--orange-2));transform:scaleX(0);transform-origin:left;will-change:transform}
 
@@ -157,7 +149,7 @@ body.no-scroll{overflow:hidden}
 @media(max-width:400px){.header__cta span{display:none}.header__cta{--pad-x:14px}}
 
 /* ---------- Hero ---------- */
-.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding:calc(var(--header-h) + 40px) 0 90px;overflow:hidden;isolation:isolate}
+.hero{position:relative;min-height:100svh;display:flex;align-items:flex-start;padding:calc(var(--header-h) + clamp(28px,7vh,84px)) 0 90px;overflow:hidden;isolation:isolate}
 .hero__bg{position:absolute;inset:0;z-index:-1}
 .hero__glow{
   position:absolute;width:min(90vw,900px);aspect-ratio:1;right:-15%;top:-10%;border-radius:50%;
@@ -212,7 +204,8 @@ body.no-scroll{overflow:hidden}
 @keyframes cue{0%{opacity:0;transform:translateY(0)}30%{opacity:1}100%{opacity:0;transform:translateY(16px)}}
 
 @media(min-width:960px){
-  .hero__inner{grid-template-columns:1.12fr .88fr}
+  .hero__inner{grid-template-columns:1.12fr .88fr;align-items:start}
+  .hero__visual{margin-top:clamp(20px,6vh,70px)}
   .scroll-cue{display:block}
 }
 @media(max-width:959px){.hero{padding-bottom:70px}.hero__d7{font-size:clamp(14rem,70vw,26rem)}}
@@ -491,6 +484,51 @@ details[open] > div{animation:reveal-faq .45s var(--ease)}
 .gnav__btn[disabled]{opacity:.3;pointer-events:none}
 @media(hover:hover) and (pointer:fine){.gallery{cursor:grab}.gallery.is-dragging{cursor:grabbing}}
 
+
+/* ---------- Movimento autoral: títulos por palavra + linha do kicker ---------- */
+.js .split .w{display:inline-block;overflow:hidden;vertical-align:top;padding:.16em .02em .14em;margin:-.16em -.02em -.14em}
+.js .split .w > i{display:inline-block;font-style:normal;transform:translate3d(0,112%,0);transition:transform 1.05s var(--ease);transition-delay:calc(var(--i,0) * 60ms)}
+.js .split.is-in .w > i{transform:none}
+.js .kicker{opacity:0;transition:opacity .9s var(--ease)}
+.js .kicker::before{transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease) .1s}
+.js .kicker.is-in{opacity:1}
+.js .kicker.is-in::before{transform:none}
+
+/* ---------- Alvos de toque (>= 44px) ---------- */
+.card__link{min-height:44px}
+.nav a{padding:12px 14px}
+.loc__info a[href^="tel"]{display:inline-block;padding:10px 0}
+.footer a{display:inline-flex;align-items:center;min-height:44px}
+.hero__meta li{min-height:32px}
+
+/* ---------- Mobile pensado para o polegar ---------- */
+.mbar{position:fixed;left:0;right:0;bottom:0;z-index:85;display:none;gap:10px;align-items:center;padding:28px var(--gutter) calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to top,rgba(10,10,11,.97) 55%,rgba(10,10,11,0));transform:translate3d(0,110%,0);transition:transform .7s var(--ease);pointer-events:none}
+.mbar > *{pointer-events:auto}
+.mbar .btn{flex:1;min-width:0}
+.mbar__call{flex:none;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line-2);background:rgba(21,21,24,.9);color:var(--text);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.mbar__call .ico{width:22px;height:22px}
+.mbar.is-visible{transform:none}
+@media(max-width:959px){.mbar{display:flex}.fab{display:none}}
+
+@media(max-width:639px){
+  /* hero: botões em largura total, alvo fácil no polegar */
+  .hero__actions .btn{width:100%}
+  .hero__meta{gap:6px 18px;font-size:.9rem}
+  /* serviços em carrossel horizontal com "espiada" do próximo card */
+  .bento{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin-inline:calc(var(--gutter) * -1);padding:4px var(--gutter) 22px;scroll-padding-inline:var(--gutter);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .bento::-webkit-scrollbar{display:none}
+  .bento > .card{flex:0 0 82%;scroll-snap-align:start;min-height:300px}
+  .bento > .card--cta{min-height:300px}
+  .loc__map,.loc__map iframe{min-height:260px}
+  .loc__actions .btn{width:100%}
+}
+@media(max-width:899px){
+  /* planos em carrossel; o "mais procurado" abre centralizado */
+  .plans__grid{position:relative;display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;margin-inline:calc(var(--gutter) * -1);padding:22px var(--gutter) 22px;scroll-padding-inline:var(--gutter);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .plans__grid::-webkit-scrollbar{display:none}
+  .plans__grid > .plan{flex:0 0 min(84%,380px);scroll-snap-align:center}
+}
+
 /* Conteúdo abaixo da dobra: renderização sob demanda */
 .about,.services,.method,.space,.proof,.plans,.faq,.contact{content-visibility:auto;contain-intrinsic-size:auto 800px}
 
@@ -500,10 +538,13 @@ details[open] > div{animation:reveal-faq .45s var(--ease)}
   *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;transition-delay:0s!important}
   .js .reveal,.js .reveal-img,.js .hero__title .line__in{opacity:1;transform:none}
   .js .reveal-img > img{clip-path:none}
+  .js .split .w > i{transform:none}
+  .js .kicker{opacity:1}
+  .js .kicker::before{transform:none}
+  .mbar{transition:none}
   .marquee__track{animation:none}
   .hcard img,.frame img,.gitem img{transition:none;filter:none}
   .rail{overflow-x:auto;-webkit-mask-image:none;mask-image:none}
   .rail__track{animation:none}
   .rcard[aria-hidden="true"]{display:none}
-  .preloader{display:none}
 }
